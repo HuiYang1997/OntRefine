@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="http://example.org/casting#"
+     xml:base="http://example.org/casting"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:owl="http://www.w3.org/2002/07/owl#">
+
+  <owl:Ontology rdf:about="http://example.org/casting"/>
+
+  <owl:Class rdf:about="http://example.org/casting#ManufacturingProcess">
+    <rdfs:label>manufacturing process</rdfs:label>
+    <rdfs:comment>A process that transforms materials into manufactured products.</rdfs:comment>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.org/casting#CastingProcess">
+    <rdfs:label>casting process</rdfs:label>
+    <rdfs:comment>A manufacturing process where molten material is poured into a mold and solidified.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="http://example.org/casting#ManufacturingProcess"/>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.org/casting#SandCasting">
+    <rdfs:label>sand casting</rdfs:label>
+    <rdfs:comment>A casting process that uses a sand mold.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="http://example.org/casting#CastingProcess"/>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.org/casting#DieCasting">
+    <rdfs:label>die casting</rdfs:label>
+    <rdfs:comment>A casting process using a reusable metal die.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="http://example.org/casting#CastingProcess"/>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.org/casting#Material">
+    <rdfs:label>material</rdfs:label>
+    <rdfs:comment>Matter used to make products or tooling.</rdfs:comment>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.org/casting#MetalMaterial">
+    <rdfs:label>metal material</rdfs:label>
+    <rdfs:comment>A metallic material such as aluminium, iron, or steel.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="http://example.org/casting#Material"/>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.org/casting#AluminiumAlloy">
+    <rdfs:label>aluminium alloy</rdfs:label>
+    <rdfs:comment>An alloy whose main constituent is aluminium.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="http://example.org/casting#MetalMaterial"/>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.org/casting#Mold">
+    <rdfs:label>mold</rdfs:label>
+    <rdfs:comment>A tool cavity that shapes molten material during casting.</rdfs:comment>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.org/casting#SandMold">
+    <rdfs:label>sand mold</rdfs:label>
+    <rdfs:comment>A mold made from sand for sand casting.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="http://example.org/casting#Mold"/>
+    <rdfs:subClassOf rdf:resource="http://example.org/casting#MetalMaterial"/>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.org/casting#Defect">
+    <rdfs:label>defect</rdfs:label>
+    <rdfs:comment>An unwanted flaw in a cast product.</rdfs:comment>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.org/casting#PorosityDefect">
+    <rdfs:label>porosity defect</rdfs:label>
+    <rdfs:comment>A casting defect caused by voids or trapped gas.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="http://example.org/casting#Defect"/>
+  </owl:Class>
+
+</rdf:RDF>

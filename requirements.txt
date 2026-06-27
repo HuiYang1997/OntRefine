@@ -1,0 +1,18 @@
+# Core ontology parsing and OnT embeddings
+ontology-transformer>=0.1.6
+rdflib>=7.0
+numpy>=1.24
+pyyaml>=6.0
+tqdm>=4.66
+
+# Deep learning runtime. Install a CUDA-specific PyTorch build if needed.
+torch>=2.1.0
+sentence-transformers>=3.0
+safetensors>=0.4.3
+tokenizers>=0.21,<0.22
+transformers>=4.43.0
+accelerate>=0.27.0
+bitsandbytes>=0.43.0
+
+# API backend for OpenAI or OpenAI-compatible servers
+openai>=1.30.0

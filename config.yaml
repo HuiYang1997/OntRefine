@@ -1,0 +1,36 @@
+# Axiom repair default configuration. CLI flags override these values.
+
+input_owl: examples/custom_ontology.owl
+output_dir: results
+
+embedding:
+  # Choices: model, finetune, hf
+  # model: use embedding.model_path
+  # finetune: fine-tune OnT on input_owl first
+  # hf: use embedding.hf_model directly
+  mode: finetune
+  model_path: ""
+  hf_model: ""  # Set to a Hugging Face model ID when using embedding.mode: hf
+  finetune_output_dir: runs/ont_finetuned
+  finetune_epochs: 3
+  finetune_batch_size: 64
+  finetune_eval_batch_size: 32
+  finetune_balanced: false
+  force_finetune: false
+
+ranking:
+  selection: top-n
+  top_n: 30
+  threshold_k: 20
+  candidate_k: 10
+
+llm:
+  # Default is local Qwen. Choices: local, api, none
+  backend: local
+  local_model_path: models/Qwen3-8B
+  enable_thinking: false
+  max_new_tokens: 1500
+  # api works for OpenAI or OpenAI-compatible servers.
+  api_base_url: ""
+  api_key_env: OPENAI_API_KEY
+  api_model: gpt-4o-mini
