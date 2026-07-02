@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="http://example.org/tiny#"
+     xml:base="http://example.org/tiny"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:owl="http://www.w3.org/2002/07/owl#">
+
+  <owl:Ontology rdf:about="http://example.org/tiny"/>
+
+  <owl:Class rdf:about="http://example.org/tiny#Process">
+    <rdfs:label>process</rdfs:label>
+    <rdfs:comment>An activity or operation that changes some input into an output.</rdfs:comment>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.org/tiny#CastingProcess">
+    <rdfs:label>casting process</rdfs:label>
+    <rdfs:comment>A process where liquid material is poured into a mold and solidified.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="http://example.org/tiny#Process"/>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.org/tiny#Material">
+    <rdfs:label>material</rdfs:label>
+    <rdfs:comment>Matter used to make products or tooling.</rdfs:comment>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.org/tiny#MetalMaterial">
+    <rdfs:label>metal material</rdfs:label>
+    <rdfs:comment>A material with metallic properties.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="http://example.org/tiny#Material"/>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.org/tiny#Mold">
+    <rdfs:label>mold</rdfs:label>
+    <rdfs:comment>A tool cavity used to shape material.</rdfs:comment>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.org/tiny#SandMold">
+    <rdfs:label>sand mold</rdfs:label>
+    <rdfs:comment>A mold made from sand.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="http://example.org/tiny#Mold"/>
+    <rdfs:subClassOf rdf:resource="http://example.org/tiny#MetalMaterial"/>
+  </owl:Class>
+
+</rdf:RDF>

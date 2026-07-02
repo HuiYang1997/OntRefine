@@ -1,50 +1,57 @@
 # OWL Subsumption Axiom Refinement
 
-A compact release repo for detecting suspicious OWL `subClassOf` axioms and repair. Current version is limited on the subsumption of atomic concept $A\sqsubseteq B$.
-
-Default workflow:
-
-1. Load an OWL ontology.
-2. Fine-tune an Ontology Transformer (OnT) embedding model on that ontology.
-3. Rank asserted direct superclass axioms and select the worst-ranked top K.
-4. Validate those axioms with a local Qwen3-8B model.
+A compact pipeline for finding suspicious asserted OWL `subClassOf` axioms and preparing repair suggestions. The current release focuses on atomic subsumption axioms of the form `A subClassOf B`.
 
 ## Quick Start
 
-Run the example ontology with a Hugging Face OnT embedding model and skip LLM validation:
+The main entry point is `run.sh`. Give it an ontology path; it will run the whole workflow:
 
 ```bash
-bash run.sh examples/custom_ontology.owl \
-  --embedding-mode hf \
-  --hf-model Hui97/OnT-MiniLM-L12-galen \
+bash run.sh examples/tiny_ontology.owl
+```
+
+By default, `run.sh` uses `embedding.mode: finetune` from `config.yaml`. This means it:
+
+1. creates the Python environment if needed;
+2. loads the input OWL ontology;
+3. uses the `ontology-transformer` package to fine-tune an OnT embedding model on that ontology;
+4. ranks asserted direct superclass axioms;
+5. sends the selected candidates to the configured repair/validation backend.
+
+The fine-tuned embedding model is written to `runs/ont_finetuned/` by default and reused on later runs. Use `--force-finetune` to train it again.
+
+For a lightweight smoke test without LLM validation, keep the same automatic fine-tuning path and add `--analyze-only`:
+
+```bash
+bash run.sh examples/tiny_ontology.owl \
   --analyze-only \
-  --top-n 5 \
-  --candidate-k 3
+  --finetune-epochs 1 \
+  --top-n 3 \
+  --candidate-k 2
 ```
 
-This command creates the Python environment on first run, downloads or loads the Hugging Face OnT embedding model, ranks suspicious superclass axioms in `examples/custom_ontology.owl`, and writes outputs to `results/`. It does not require a local Qwen model or an API key because `--analyze-only` disables LLM validation.
+`--analyze-only` only skips the LLM validation step. It still loads the ontology, fine-tunes/loads the OnT embedding model, ranks asserted `subClassOf` axioms, selects candidates, and writes all output files. Reviewed items in `llm_review_results.json` are marked as skipped.
 
-`--analyze-only` means ranking-only mode. The pipeline still loads the ontology, computes OnT embeddings, ranks asserted `subClassOf` axioms, selects review candidates, and writes `rank_analysis.json`, `prompts.json`, `not_sent_to_llm.json`, `llm_review_results.json`, and `summary_report.md`. The difference is that it does not send prompts to a local or API LLM; reviewed items in `llm_review_results.json` are marked as skipped.
+## Configuration
 
-If no ontology path is provided, `run.sh` uses `examples/custom_ontology.owl`. The script uses conda if available, otherwise it creates `.venv`.
+Defaults live in `config.yaml`, and CLI flags override them. The most common settings are:
 
-The local Qwen path is configured in `config.yaml` and should point to **your own downloaded model directory** when you run LLM validation:
-
-```yaml
-llm:
-  backend: local
-  local_model_path: models/Qwen3-8B
-```
-
-Use `SKIP_SETUP=1` when you have already activated a compatible Python environment:
-
-```bash
-SKIP_SETUP=1 bash run.sh examples/custom_ontology.owl --analyze-only
-```
+- `embedding.mode`: `finetune`, `model`, or `hf`.
+- `embedding.finetune_epochs`: number of OnT fine-tuning epochs.
+- `embedding.finetune_output_dir`: where the fine-tuned model is saved.
+- `ranking.top_n`, `ranking.threshold_k`, `ranking.candidate_k`: controls candidate selection.
+- `llm.backend`: `local`, `api`, or `none`.
+- `llm.local_model_path`: relative path to your local Qwen model, for example `models/Qwen3-8B`.
 
 ## Embedding Modes
 
-Use your own fine-tuned OnT model:
+Default mode: fine-tune OnT on the input ontology and then run repair.
+
+```bash
+bash run.sh ontology.owl --embedding-mode finetune --finetune-epochs 3
+```
+
+Use your own already fine-tuned local OnT model:
 
 ```bash
 bash run.sh ontology.owl \
@@ -52,29 +59,21 @@ bash run.sh ontology.owl \
   --embedding-model models/ont_model/final
 ```
 
-Fine-tune OnT from the input ontology, then run repair:
-
-```bash
-bash run.sh ontology.owl \
-  --embedding-mode finetune \
-  --finetune-epochs 3
-```
-
-Skip fine-tuning and use a Hugging Face OnT model:
+Use a Hugging Face OnT model directly, without ontology-specific fine-tuning:
 
 ```bash
 bash run.sh ontology.owl \
   --embedding-mode hf \
-  --hf-model Hui97/OnT-MiniLM-L12-galen
+  --hf-model <hf-ont-model-id>
 ```
 
-You can also fine-tune only:
+Fine-tune only, without running the repair pipeline:
 
 ```bash
 python scripts/finetune_ont.py --owl ontology.owl --output runs/my_ont --epochs 3
 ```
 
-## Ranking Parameters
+## Ranking And Repair Options
 
 ```bash
 bash run.sh ontology.owl --top-n 30 --candidate-k 10
@@ -86,17 +85,15 @@ Useful options:
 - `--top-n 30`
 - `--threshold-k 20`
 - `--candidate-k 10`
-- `--analyze-only` to skip LLM validation
+- `--analyze-only` to skip LLM validation while still running embedding and ranking
 
-## LLM Backends
-
-Default is local Qwen:
+Local Qwen validation:
 
 ```bash
 bash run.sh ontology.owl --llm-backend local --local-llm models/Qwen3-8B
 ```
 
-Optional API backend, including OpenAI-compatible servers:
+OpenAI or OpenAI-compatible API validation:
 
 ```bash
 OPENAI_API_KEY=... bash run.sh ontology.owl \
@@ -120,7 +117,7 @@ Outputs are written to `results/` by default:
 
 - `rank_analysis.json`: ranked suspicious axioms and candidate parents.
 - `prompts.json`: exact LLM prompts.
-- `llm_review_results.json`: parsed LLM validation results.
+- `llm_review_results.json`: parsed LLM validation results, or skipped markers in `--analyze-only` mode.
 - `not_sent_to_llm.json`: axioms not sent for validation.
 - `summary_report.md`: short report.
 
@@ -133,6 +130,7 @@ axiom_repair_github_release/
   requirements.txt
   run.sh
   examples/custom_ontology.owl
+  examples/tiny_ontology.owl
   scripts/finetune_ont.py
   src/
     llm.py
@@ -143,26 +141,18 @@ axiom_repair_github_release/
     run_pipeline.py
 ```
 
-The fine-tuned model files are intentionally not committed. Provide a local path with `--embedding-model`, or publish the model on Hugging Face and pass the model ID.
-
-## Notes
-
-- `--analyze-only` skips LLM validation but still performs embedding-based ranking.
-- `--embedding-mode finetune` writes model artifacts under `runs/` unless overridden.
-- `--llm-backend local` first checks for an OpenAI-compatible vLLM server on `http://localhost:8000/v1`; otherwise it loads `local_model_path` with Transformers.
-- CPU-only machines may need a custom PyTorch install. If `bitsandbytes` causes installation problems and you do not need quantized local LLM loading, remove it from the environment before installing.
+The fine-tuned model files and generated outputs are intentionally not committed.
 
 ## Tested Environment
 
-This release was smoke-tested with a fresh conda environment created by `run.sh` on Linux x86_64. The validated command pattern was:
+Smoke-tested on Linux x86_64 with a fresh conda environment created by `run.sh`:
 
 ```bash
-CONDA_ENV=axiom_repair_test bash run.sh examples/custom_ontology.owl \
-  --embedding-mode hf \
-  --hf-model Hui97/OnT-MiniLM-L12-galen \
+CONDA_ENV=axiom_repair_test bash run.sh examples/tiny_ontology.owl \
   --analyze-only \
-  --top-n 5 \
-  --candidate-k 3
+  --finetune-epochs 1 \
+  --top-n 3 \
+  --candidate-k 2
 ```
 
 Tested software stack:
@@ -175,5 +165,4 @@ Tested software stack:
 - `transformers 4.55.4`
 - `openai 2.44.0`
 
-The smoke test completed successfully on the example ontology in ranking-only mode with a downloadable Hugging Face OnT model. The test machine reported an older NVIDIA driver during CUDA initialization, so PyTorch fell back to a usable execution path for this small run; update the driver or install a matching PyTorch build for GPU-heavy fine-tuning or local LLM inference.
-
+The smoke test completed successfully on `examples/tiny_ontology.owl` in `--analyze-only` mode. For GPU-heavy fine-tuning or local LLM inference, install a PyTorch/CUDA build that matches your driver.
